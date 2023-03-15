@@ -44,9 +44,7 @@ class ValueRange:
         return self._upper
 
     def diameter(self) -> float:
-        if self.is_valid():
-            return self.upper() - self.lower()
-        return 0
+        return self.upper() - self.lower() if self.is_valid() else 0
 
     def contains(self, value: float) -> bool:
         return self.is_valid() and (self.lower() <= value <= self.upper())

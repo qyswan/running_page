@@ -23,7 +23,7 @@ class GithubDrawer(TracksDrawer):
         year_size = 200 * 4.0 / 80.0
         year_style = f"font-size:{year_size}px; font-family:Arial;"
         year_length_style = f"font-size:{110 * 3.0 / 80.0}px; font-family:Arial;"
-        month_names_style = f"font-size:2.5px; font-family:Arial"
+        month_names_style = "font-size:2.5px; font-family:Arial"
         total_length_year_dict = self.poster.total_length_year_dict
         for year in range(self.poster.years.from_year, self.poster.years.to_year + 1)[
             ::-1
@@ -57,7 +57,7 @@ class GithubDrawer(TracksDrawer):
                 ]
                 # support windows or others doesn't support locale Name, by Hard code
             except Exception as e:
-                print(str(e))
+                print(e)
                 month_names = [
                     "Jan",
                     "Feb",
@@ -108,9 +108,9 @@ class GithubDrawer(TracksDrawer):
             rect_x = 10.0
             dom = (2.6, 2.6)
             # add every day of this year for 53 weeks and per week has 7 days
-            for i in range(54):
+            for _ in range(54):
                 rect_y = offset.y + year_size + 2
-                for j in range(7):
+                for _ in range(7):
                     if int(github_rect_day.year) > year:
                         break
                     rect_y += 3.5
@@ -118,7 +118,7 @@ class GithubDrawer(TracksDrawer):
                     date_title = str(github_rect_day)
                     if date_title in self.poster.tracks_by_date:
                         tracks = self.poster.tracks_by_date[date_title]
-                        length = sum([t.length for t in tracks])
+                        length = sum(t.length for t in tracks)
                         distance1 = self.poster.special_distance["special_distance"]
                         distance2 = self.poster.special_distance["special_distance2"]
                         has_special = distance1 < length / 1000 < distance2

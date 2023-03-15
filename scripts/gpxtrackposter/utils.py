@@ -54,10 +54,9 @@ def project(
         for latlng in latlngline:
             if bbox.contains(latlng):
                 line.append((offset + scale * latlng2xy(latlng)).tuple())
-            else:
-                if len(line) > 0:
-                    lines.append(line)
-                    line = []
+            elif len(line) > 0:
+                lines.append(line)
+                line = []
         if len(line) > 0:
             lines.append(line)
     return lines
@@ -118,9 +117,7 @@ def format_float(f) -> str:
 def parse_datetime_to_local(
     start_time: datetime, end_time: datetime, gpx: "mod_gpxpy.gpx.GPX"
 ) -> Tuple[datetime, datetime]:
-    # just parse the start time, because start/end maybe different
-    offset = start_time.utcoffset()
-    if offset:
+    if offset := start_time.utcoffset():
         return start_time + offset, end_time + offset
     tf = TimezoneFinder()
     lat, _, lng, _ = list(gpx.get_bounds())

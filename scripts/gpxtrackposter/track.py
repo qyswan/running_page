@@ -49,7 +49,6 @@ class Track:
             print(
                 f"Something went wrong when loading GPX. for file {self.file_names[0]}, we just ignore this file and continue"
             )
-            pass
 
     def load_from_db(self, activity):
         # use strava as file name
@@ -139,7 +138,6 @@ class Track:
             print(
                 f"something wrong append this {self.end_time},in files {str(self.file_names)}"
             )
-            pass
 
     def load_cache(self, cache_file_name):
         try:
@@ -159,13 +157,13 @@ class Track:
                 )
                 self.length = float(data["length"])
                 self.polylines = []
-                for data_line in data["segments"]:
-                    self.polylines.append(
-                        [
-                            s2.LatLng.from_degrees(float(d["lat"]), float(d["lng"]))
-                            for d in data_line
-                        ]
-                    )
+                self.polylines.extend(
+                    [
+                        s2.LatLng.from_degrees(float(d["lat"]), float(d["lng"]))
+                        for d in data_line
+                    ]
+                    for data_line in data["segments"]
+                )
         except Exception as e:
             raise TrackLoadError("Failed to load track data from cache.") from e
 
@@ -175,14 +173,13 @@ class Track:
         if not os.path.isdir(dir_name):
             os.makedirs(dir_name)
         with open(cache_file_name, "w") as json_file:
-            lines_data = []
-            for line in self.polylines:
-                lines_data.append(
-                    [
-                        {"lat": latlng.lat().degrees, "lng": latlng.lng().degrees}
-                        for latlng in line
-                    ]
-                )
+            lines_data = [
+                [
+                    {"lat": latlng.lat().degrees, "lng": latlng.lng().degrees}
+                    for latlng in line
+                ]
+                for line in self.polylines
+            ]
             json.dump(
                 {
                     "start": self.start_time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -223,6 +220,6 @@ class Track:
             "map": run_map(self.polyline_str),
             "start_latlng": self.start_latlng,
         }
-        d.update(self.moving_dict)
+        d |= self.moving_dict
         # return a nametuple that can use . to get attr
         return namedtuple("x", d.keys())(*d.values())

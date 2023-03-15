@@ -105,7 +105,7 @@ def run(refresh_token):
             save_activity(full_activity)
 
         if last_id is None or not activities:
-            logger.info(f"Found no new activities, finishing")
+            logger.info("Found no new activities, finishing")
             return
 
 
@@ -152,10 +152,7 @@ def sanitise_json(d):
     if isinstance(d, dict):
         return {_transform_key(k): sanitise_json(v) for k, v in d.items()}
 
-    if isinstance(d, (tuple, list)):
-        return [sanitise_json(x) for x in d]
-
-    return d
+    return [sanitise_json(x) for x in d] if isinstance(d, (tuple, list)) else d
 
 
 def get_to_generate_files():
@@ -176,14 +173,11 @@ def get_to_generate_files():
             else:
                 logger.info(f"Invalid timestamp: {t}")
 
-        if len(timestamps) > 0:
-            last_time = max(timestamps)
-        else:
-            last_time = 0
+        last_time = max(timestamps, default=0)
     except:
         last_time = 0
     return [
-        OUTPUT_DIR + "/" + i
+        f"{OUTPUT_DIR}/{i}"
         for i in os.listdir(OUTPUT_DIR)
         if not i.startswith(".") and int(i.split(".")[0]) > last_time
     ]
@@ -225,9 +219,10 @@ def generate_gpx(title, latitude_data, longitude_data, elevation_data, heart_rat
         """
         counter = 0
         for p in points:
-            while p["start_time"] >= update_data[counter]["end_epoch_ms"]:
-                if counter == len(update_data) - 1:
-                    break
+            while (
+                p["start_time"] >= update_data[counter]["end_epoch_ms"]
+                and counter != len(update_data) - 1
+            ):
                 p[update_name] = update_data[counter]["value"]
                 counter += 1
 
@@ -309,14 +304,13 @@ def parse_activity_data(activity):
 
     title = activity["tags"].get("com.nike.name")
 
-    gpx_doc = generate_gpx(
+    return generate_gpx(
         title, latitude_data, longitude_data, elevation_data, heart_rate_data
     )
-    return gpx_doc
 
 
 def save_gpx(gpx_data, activity_id):
-    file_path = os.path.join(GPX_FOLDER, activity_id + ".gpx")
+    file_path = os.path.join(GPX_FOLDER, f"{activity_id}.gpx")
     with open(file_path, "w") as f:
         f.write(gpx_data)
 
@@ -385,18 +379,15 @@ def make_new_gpxs(files):
                 return
         # ALL save name using utc if you want local please offset
         activity_name = str(json_data["end_epoch_ms"])
-        parsed_data = parse_activity_data(json_data)
-        if parsed_data:
-            gpx_files.append(os.path.join(GPX_FOLDER, str(activity_name) + ".gpx"))
+        if parsed_data := parse_activity_data(json_data):
+            gpx_files.append(os.path.join(GPX_FOLDER, f"{activity_name}.gpx"))
             save_gpx(parsed_data, activity_name)
         else:
             try:
-                track = parse_no_gpx_data(json_data)
-                if track:
+                if track := parse_no_gpx_data(json_data):
                     tracks_list.append(track)
-            # just ignore some unexcept run
             except Exception as e:
-                print(str(e))
+                print(e)
                 continue
     if tracks_list:
         generator = Generator(SQL_FILE)

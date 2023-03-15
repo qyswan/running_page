@@ -25,12 +25,11 @@ get_md5_data = lambda data: md5(str(data).encode("utf-8")).hexdigest().upper()
 def download_joyrun_gpx(gpx_data, joyrun_id):
     try:
         print(f"downloading joyrun_id {str(joyrun_id)} gpx")
-        file_path = os.path.join(GPX_FOLDER, str(joyrun_id) + ".gpx")
+        file_path = os.path.join(GPX_FOLDER, f"{str(joyrun_id)}.gpx")
         with open(file_path, "w") as fb:
             fb.write(gpx_data)
     except:
         print(f"wrong id {joyrun_id}")
-        pass
 
 
 class JoyrunAuth:
@@ -130,7 +129,7 @@ class Joyrun:
 
     def __update_loginInfo(self):
         self.auth.reload(uid=self.uid, sid=self.sid)
-        loginCookie = "sid=%s&uid=%s" % (self.sid, self.uid)
+        loginCookie = f"sid={self.sid}&uid={self.uid}"
         self.session.headers.update({"ypcookie": loginCookie})
         self.session.cookies.clear()
         self.session.cookies.set("ypcookie", quote(loginCookie).lower())
@@ -174,7 +173,7 @@ class Joyrun:
             points = eval(content.replace("-", ","))
             points = [[p[0] / 1000000, p[1] / 1000000] for p in points]
         except Exception as e:
-            print(str(e))
+            print(e)
             points = []
         return points
 
@@ -182,14 +181,12 @@ class Joyrun:
     def parse_points_to_gpx(run_points_data, start_time, end_time, interval=5):
         # TODO for now kind of same as `keep` maybe refactor later
         points_dict_list = []
-        i = 0
-        for point in run_points_data[:-1]:
+        for i, point in enumerate(run_points_data[:-1]):
             points_dict = {
                 "latitude": point[0],
                 "longitude": point[1],
                 "time": datetime.utcfromtimestamp(start_time + interval * i),
             }
-            i += 1
             points_dict_list.append(points_dict)
         points_dict_list.append(
             {
@@ -233,13 +230,11 @@ class Joyrun:
         start_time = run_data["starttime"]
         end_time = run_data["endtime"]
         run_points_data = self.parse_content_to_ponits(run_data["content"])
-        if with_gpx:
-            # pass the track no points
-            if run_points_data:
-                gpx_data = self.parse_points_to_gpx(
-                    run_points_data, start_time, end_time
-                )
-                download_joyrun_gpx(gpx_data, str(joyrun_id))
+        if with_gpx and run_points_data:
+            gpx_data = self.parse_points_to_gpx(
+                run_points_data, start_time, end_time
+            )
+            download_joyrun_gpx(gpx_data, str(joyrun_id))
         heart_rate_list = eval(run_data["heartrate"]) if run_data["heartrate"] else None
         heart_rate = None
         if heart_rate_list:
