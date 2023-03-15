@@ -42,19 +42,20 @@ class Generator:
         print("Start syncing")
         if force:
             filters = {"before": datetime.datetime.utcnow()}
+        elif last_activity := self.session.query(
+            func.max(Activity.start_date)
+        ).scalar():
+            last_activity_date = arrow.get(last_activity)
+            last_activity_date = last_activity_date.shift(days=-7)
+            filters = {"after": last_activity_date.datetime}
         else:
-            last_activity = self.session.query(func.max(Activity.start_date)).scalar()
-            if last_activity:
-                last_activity_date = arrow.get(last_activity)
-                last_activity_date = last_activity_date.shift(days=-7)
-                filters = {"after": last_activity_date.datetime}
-            else:
-                filters = {"before": datetime.datetime.utcnow()}
+            filters = {"before": datetime.datetime.utcnow()}
 
         for run_activity in self.client.get_activities(**filters):
             if run_activity.type == "Run":
-                created = update_or_create_activity(self.session, run_activity)
-                if created:
+                if created := update_or_create_activity(
+                    self.session, run_activity
+                ):
                     sys.stdout.write("+")
                 else:
                     sys.stdout.write(".")
@@ -69,8 +70,9 @@ class Generator:
             print("No tracks found.")
             return
         for t in tracks:
-            created = update_or_create_activity(self.session, t.to_namedtuple())
-            if created:
+            if created := update_or_create_activity(
+                self.session, t.to_namedtuple()
+            ):
                 sys.stdout.write("+")
             else:
                 sys.stdout.write(".")
@@ -84,8 +86,7 @@ class Generator:
             return
         print("Syncing tracks '+' means new track '.' means update tracks")
         for t in app_tracks:
-            created = update_or_create_activity(self.session, t)
-            if created:
+            if created := update_or_create_activity(self.session, t):
                 sys.stdout.write("+")
             else:
                 sys.stdout.write(".")

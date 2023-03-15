@@ -45,14 +45,12 @@ class YearRange:
             self.from_year = None
             self.to_year = None
             return True
-        m = re.match(r"^\d+$", s)
-        if m:
+        if m := re.match(r"^\d+$", s):
             self.from_year = int(s)
             self.to_year = self.from_year
             return True
-        m = re.match(r"^(\d+)-(\d+)$", s)
-        if m:
-            y1, y2 = int(m.group(1)), int(m.group(2))
+        if m := re.match(r"^(\d+)-(\d+)$", s):
+            y1, y2 = int(m[1]), int(m[2])
             if y1 <= y2:
                 self.from_year = y1
                 self.to_year = y2
@@ -77,9 +75,7 @@ class YearRange:
 
     def count(self) -> Optional[int]:
         """Return number of years contained in the current range"""
-        if self.from_year is None:
-            return None
-        return 1 + self.to_year - self.from_year
+        return None if self.from_year is None else 1 + self.to_year - self.from_year
 
     def all(self):
         return list(range(int(self.from_year), int(self.to_year) + 1))

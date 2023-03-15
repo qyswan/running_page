@@ -84,10 +84,9 @@ def parse_raw_data_to_nametuple(run_data, old_gpx_ids, with_download_gpx=False):
         r = requests.get(raw_data_url)
         # string strart with `H4sIAAAAAAAA` --> decode and unzip
         run_points_data = decode_runmap_data(r.text)
-        if with_download_gpx:
-            if str(keep_id) not in old_gpx_ids:
-                gpx_data = parse_points_to_gpx(run_points_data, start_time)
-                download_keep_gpx(gpx_data, str(keep_id))
+        if with_download_gpx and str(keep_id) not in old_gpx_ids:
+            gpx_data = parse_points_to_gpx(run_points_data, start_time)
+            download_keep_gpx(gpx_data, str(keep_id))
         run_points_data = [[p["latitude"], p["longitude"]] for p in run_points_data]
     heart_rate = None
     if run_data["heartRate"]:
@@ -146,7 +145,7 @@ def get_all_keep_tracks(email, password, old_tracks_ids, with_download_gpx=False
             )
             tracks.append(track)
         except Exception as e:
-            print(f"Something wrong paring keep id {run}" + str(e))
+            print(f"Something wrong paring keep id {run}{str(e)}")
     return tracks
 
 
@@ -183,12 +182,11 @@ def parse_points_to_gpx(run_points_data, start_time):
 def download_keep_gpx(gpx_data, keep_id):
     try:
         print(f"downloading keep_id {str(keep_id)} gpx")
-        file_path = os.path.join(GPX_FOLDER, str(keep_id) + ".gpx")
+        file_path = os.path.join(GPX_FOLDER, f"{str(keep_id)}.gpx")
         with open(file_path, "w") as fb:
             fb.write(gpx_data)
     except:
         print(f"wrong id {keep_id}")
-        pass
 
 
 def run_keep_sync(email, password, with_download_gpx=False):

@@ -16,21 +16,20 @@ def generate_strava_run_points(start_time, strava_streams):
     """
     strava return same len data list
     """
-    if not (strava_streams.get("time") and strava_streams.get("latlng")):
+    if not strava_streams.get("time") or not strava_streams.get("latlng"):
         return None
-    points_dict_list = []
     time_list = strava_streams["time"].data
     time_list = [start_time + timedelta(seconds=int(i)) for i in time_list]
     latlng_list = strava_streams["latlng"].data
 
-    for i, j in zip(time_list, latlng_list):
-        points_dict_list.append(
-            {
-                "latitude": j[0],
-                "longitude": j[1],
-                "time": i,
-            }
-        )
+    points_dict_list = [
+        {
+            "latitude": j[0],
+            "longitude": j[1],
+            "time": i,
+        }
+        for i, j in zip(time_list, latlng_list)
+    ]
     # add heart rate
     if strava_streams.get("heartrate"):
         heartrate_list = strava_streams.get("heartrate").data
@@ -90,8 +89,7 @@ async def upload_to_activities(garmin_client, strava_client):
         # strava steams types info from strava api doc
         types = ["time", "latlng", "altitude", "heartrate", "velocity_smooth", "temp"]
         s = strava_client.get_activity_streams(i.id, types=types, resolution="medium")
-        points = generate_strava_run_points(start_time, s)
-        if points:
+        if points := generate_strava_run_points(start_time, s):
             garmin_type = STRAVA_GARMIN_TYPE_DICT.get(activity_type, "running")
             gpx_doc = make_gpx_from_points("test", points)
             file = BytesIO(bytes(gpx_doc, "utf8"))

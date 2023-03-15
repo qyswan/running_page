@@ -67,8 +67,6 @@ class Poster:
             except locale.Error as e:
                 print(f'Cannot set locale to "{language}": {e}')
                 language = None
-                pass
-
         # Fall-back to NullTranslations, if the specified language translation cannot be found.
         if language:
             lang = gettext.translation(
@@ -99,7 +97,7 @@ class Poster:
                 self.tracks_by_date[text_date] = [track]
             self.length_range.extend(track.length)
         for tracks in self.tracks_by_date.values():
-            length = sum([t.length for t in tracks])
+            length = sum(t.length for t in tracks)
             self.length_range_by_date.extend(length)
 
     def draw(self, drawer, output):
@@ -116,7 +114,7 @@ class Poster:
         d = svgwrite.Drawing(output, (f"{width}mm", f"{height}mm"))
         d.viewbox(0, 0, self.width, height)
         d.add(d.rect((0, 0), (width, height), fill=self.colors["background"]))
-        if not self.drawer_type == "plain":
+        if self.drawer_type != "plain":
             self.__draw_header(d)
             self.__draw_footer(d)
             self.__draw_tracks(d, XY(width - 20, height - 30 - 30), XY(10, 30))
@@ -126,19 +124,15 @@ class Poster:
 
     def m2u(self, m):
         """Convert meters to kilometers or miles, according to units."""
-        if self.units == "metric":
-            return 0.001 * m
-        return 0.001 * m / 1.609344
+        return 0.001 * m if self.units == "metric" else 0.001 * m / 1.609344
 
     def u(self):
         """Return the unit of distance being used on the Poster."""
-        if self.units == "metric":
-            return "km"
-        return "mi"
+        return "km" if self.units == "metric" else "mi"
 
     def format_distance(self, d: float) -> str:
         """Formats a distance using the locale specific float format and the selected unit."""
-        return format_float(self.m2u(d)) + " " + self.u()
+        return f"{format_float(self.m2u(d))} {self.u()}"
 
     def __draw_tracks(self, d, size: XY, offset: XY):
         self.tracks_drawer.draw(d, size, offset)

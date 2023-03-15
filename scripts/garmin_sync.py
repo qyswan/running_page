@@ -130,7 +130,7 @@ class Garmin:
         if not response_url:
             raise GarminConnectAuthenticationError("Authentication error")
 
-        response_url = re.sub(r"\\", "", response_url.group(1))
+        response_url = re.sub(r"\\", "", response_url[1])
         try:
             response = self.cf_req.get(response_url)
             self.req.cookies = self.cf_req.cookies
@@ -155,14 +155,12 @@ class Garmin:
         except Exception as err:
             if retrying:
                 logger.debug(
-                    "Exception occurred during data retrieval, relogin without effect: %s"
-                    % err
+                    f"Exception occurred during data retrieval, relogin without effect: {err}"
                 )
                 raise GarminConnectConnectionError("Error connecting") from err
             else:
                 logger.debug(
-                    "Exception occurred during data retrieval - perhaps session expired - trying relogin: %s"
-                    % err
+                    f"Exception occurred during data retrieval - perhaps session expired - trying relogin: {err}"
                 )
                 self.login()
                 await self.fetch_data(url, retrying=True)
@@ -175,7 +173,7 @@ class Garmin:
             self.login()
         url = f"{self.modern_url}/proxy/activitylist-service/activities/search/activities?start={start}&limit={limit}"
         if self.is_only_running:
-            url = url + "&activityType=running"
+            url = f"{url}&activityType=running"
         return await self.fetch_data(url)
 
     async def download_activity(self, activity_id):
@@ -196,7 +194,7 @@ class Garmin:
                     self.upload_url, files=files, headers={"nk": "NT"}
                 )
             except Exception as e:
-                print(str(e))
+                print(e)
                 # just pass for now
                 continue
             try:
@@ -261,7 +259,6 @@ async def download_garmin_gpx(client, activity_id):
     except:
         print(f"Failed to download activity {activity_id}: ")
         traceback.print_exc()
-        pass
 
 
 async def get_activity_id_list(client, start=0):

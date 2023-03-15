@@ -17,7 +17,7 @@ import string
 # random user name 8 letters
 def randomword():
     letters = string.ascii_lowercase
-    return "".join(random.choice(letters) for i in range(8))
+    return "".join(random.choice(letters) for _ in range(8))
 
 
 # reverse the location (lan, lon) -> location detail
@@ -124,9 +124,7 @@ def update_or_create_activity(session, run_activity):
             activity.summary_polyline = run_activity.map.summary_polyline
     except Exception as e:
         print(f"something wrong with {run_activity.id}")
-        print(str(e))
-        pass
-
+        print(e)
     return created
 
 

@@ -64,12 +64,11 @@ def device_info_headers():
 def download_codoon_gpx(gpx_data, log_id):
     try:
         print(f"downloading codoon {str(log_id)} gpx")
-        file_path = os.path.join(GPX_FOLDER, str(log_id) + ".gpx")
+        file_path = os.path.join(GPX_FOLDER, f"{str(log_id)}.gpx")
         with open(file_path, "w") as fb:
             fb.write(gpx_data)
     except:
         print(f"wrong id {log_id}")
-        pass
 
 
 class CodoonAuth:
@@ -83,9 +82,7 @@ class CodoonAuth:
             session.headers.update(device_info_headers())
             query = f"client_id={client_id}&grant_type=refresh_token&refresh_token={refresh_token}&scope=user%2Csports"
             r = session.post(
-                f"{base_url}/token?" + query,
-                data=query,
-                auth=self.reload(query),
+                f"{base_url}/token?{query}", data=query, auth=self.reload(query)
             )
             if not r.ok:
                 print(r.json())
@@ -104,7 +101,7 @@ class CodoonAuth:
         arr = path.split("?")
         path = arr[0]
         query = arr[1] if len(arr) > 1 else ""
-        body_str = body if body else ""
+        body_str = body or ""
         if body is not None and not isinstance(body, str):
             body_str = json.dumps(body)
         if query != "":
@@ -123,7 +120,7 @@ class CodoonAuth:
         sign = ""
         if r.method == "GET":
             timestamp = 0
-            r.headers["authorization"] = "Basic " + basic_auth
+            r.headers["authorization"] = f"Basic {basic_auth}"
             r.headers["timestamp"] = timestamp
             sign = self.__get_signature(
                 r.headers["authorization"], r.path_url, timestamp=timestamp
@@ -132,12 +129,12 @@ class CodoonAuth:
             timestamp = int(time.time())
             r.headers["timestamp"] = timestamp
             if "refresh_token" in params:
-                r.headers["authorization"] = "Basic " + basic_auth
+                r.headers["authorization"] = f"Basic {basic_auth}"
                 r.headers[
                     "content-type"
                 ] = "application/x-www-form-urlencode; charset=utf-8"
             else:
-                r.headers["authorization"] = "Bearer " + self.token
+                r.headers["authorization"] = f"Bearer {self.token}"
                 r.headers["content-type"] = "application/json; charset=utf-8"
             sign = self.__get_signature(
                 r.headers["authorization"], r.path_url, body=body, timestamp=timestamp
@@ -216,7 +213,7 @@ class Codoon:
         try:
             points = [[p["latitude"], p["longitude"]] for p in points]
         except Exception as e:
-            print(str(e))
+            print(e)
             points = []
         return points
 
@@ -295,11 +292,9 @@ class Codoon:
         run_points_data = run_data["points"] if "points" in run_data else None
 
         latlng_data = self.parse_latlng(run_points_data)
-        if with_gpx:
-            # pass the track no points
-            if str(log_id) not in old_gpx_ids and run_points_data:
-                gpx_data = self.parse_points_to_gpx(run_points_data)
-                download_codoon_gpx(gpx_data, str(log_id))
+        if with_gpx and str(log_id) not in old_gpx_ids and run_points_data:
+            gpx_data = self.parse_points_to_gpx(run_points_data)
+            download_codoon_gpx(gpx_data, str(log_id))
         heart_rate = None
 
         polyline_str = polyline.encode(latlng_data) if latlng_data else ""
@@ -314,7 +309,7 @@ class Codoon:
         cast_type = TYPE_DICT[sport_type] if sport_type in TYPE_DICT else sport_type
         d = {
             "id": log_id,
-            "name": str(cast_type) + " from codoon",
+            "name": f"{str(cast_type)} from codoon",
             "type": cast_type,
             "start_date": datetime.strftime(start_date, "%Y-%m-%d %H:%M:%S"),
             "end": datetime.strftime(end_date, "%Y-%m-%d %H:%M:%S"),
@@ -345,8 +340,9 @@ class Codoon:
         for i in new_run_routes:
             run_data = self.get_single_run_record(i["route_id"])
             run_data["data"]["id"] = i["log_id"]
-            track = self.parse_raw_data_to_namedtuple(run_data, old_gpx_ids, with_gpx)
-            if track:
+            if track := self.parse_raw_data_to_namedtuple(
+                run_data, old_gpx_ids, with_gpx
+            ):
                 tracks.append(track)
         return tracks
 

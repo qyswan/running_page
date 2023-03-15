@@ -75,7 +75,7 @@ class TrackLoader:
 
     def load_tracks(self, base_dir):
         """Load tracks base_dir and return as a List of tracks"""
-        file_names = [x for x in self._list_gpx_files(base_dir)]
+        file_names = list(self._list_gpx_files(base_dir))
         log.info(f"GPX files: {len(file_names)}")
         print(len(file_names))
 
@@ -90,9 +90,9 @@ class TrackLoader:
             log.info(f"Loaded tracks from cache: {len(cached_tracks)}")
             tracks = list(cached_tracks.values())
 
-        # load remaining gpx files
-        remaining_file_names = [f for f in file_names if f not in cached_tracks]
-        if remaining_file_names:
+        if remaining_file_names := [
+            f for f in file_names if f not in cached_tracks
+        ]:
             log.info(
                 f"Trying to load {len(remaining_file_names)} track(s) from GPX files; this may take a while..."
             )

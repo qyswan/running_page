@@ -183,7 +183,7 @@ class CircularDrawer(TracksDrawer):
             if length_range.upper() < distance:
                 continue
             ring_distance = distance
-            if (length_range.upper() / distance) <= 5:
+            if length_range.upper() / ring_distance <= 5:
                 break
         return ring_distance
 
@@ -219,7 +219,7 @@ class CircularDrawer(TracksDrawer):
         rr: ValueRange,
         center: XY,
     ):
-        length = sum([t.length for t in tracks])
+        length = sum(t.length for t in tracks)
         has_special = len([t for t in tracks if t.special]) > 0
         color = self.color(self.poster.length_range_by_date, length, has_special)
         r1 = rr.lower()

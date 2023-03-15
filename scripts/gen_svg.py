@@ -189,12 +189,12 @@ def main():
         help="activities db file",
     )
 
-    for _, drawer in drawers.items():
+    for drawer in drawers.values():
         drawer.create_args(args_parser)
 
     args = args_parser.parse_args()
 
-    for _, drawer in drawers.items():
+    for drawer in drawers.values():
         drawer.fetch_args(args)
 
     log = logging.getLogger("gpxtrackposter")
@@ -237,11 +237,7 @@ def main():
         )
     p.set_language(args.language)
     p.athlete = args.athlete
-    if args.title:
-        p.title = args.title
-    else:
-        p.title = p.trans("MY TRACKS")
-
+    p.title = args.title or p.trans("MY TRACKS")
     p.special_distance = {
         "special_distance": args.special_distance,
         "special_distance2": args.special_distance2,
